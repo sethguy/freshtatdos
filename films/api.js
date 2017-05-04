@@ -37,11 +37,9 @@ router.get('/sert/all', function(req, response, next) {
 
     db.all("SELECT * from films", function(err, rows) {
 
-        console.log(query, "   ", rows.map((film) => { film.release_date = new Date(film.release_date) }))
-
         mongoMsg(sertMany("films", rows.map((film) => {
 
-            film.release_date = new Date(film.release_date).getTime()
+            film.milli_date = new Date(film.release_date).getTime()
 
             return film
 
@@ -55,6 +53,49 @@ router.get('/sert/all', function(req, response, next) {
 
 })
 
+
+ function decimalAdjust(type, value, exp) {
+    // If the exp is undefined or zero...
+    if (typeof exp === 'undefined' || +exp === 0) {
+      return Math[type](value);
+    }
+    value = +value;
+    exp = +exp;
+    // If the value is not a number or the exp is not an integer...
+    if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+      return NaN;
+    }
+    // If the value is negative...
+    if (value < 0) {
+      return -decimalAdjust(type, -value, exp);
+    }
+    // Shift
+    value = value.toString().split('e');
+    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+    // Shift back
+    value = value.toString().split('e');
+    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+  }
+
+  // Decimal round
+  if (!Math.round10) {
+    Math.round10 = function(value, exp) {
+      return decimalAdjust('round', value, exp);
+    };
+  }
+  // Decimal floor
+  if (!Math.floor10) {
+    Math.floor10 = function(value, exp) {
+      return decimalAdjust('floor', value, exp);
+    };
+  }
+  // Decimal ceil
+  if (!Math.ceil10) {
+    Math.ceil10 = function(value, exp) {
+      return decimalAdjust('ceil', value, exp);
+    };
+  }
+
 router.get('/:id/recommendations', function(req, response, next) {
 
     try {
@@ -62,8 +103,6 @@ router.get('/:id/recommendations', function(req, response, next) {
         var query = req.query;
 
         var params = req.params;
-
-        console.log(query, "   ", params)
 
         var thirdPartyUrl = GA_THIRD_PARTY_API_URL_BASE.concat(params.id)
 
@@ -100,12 +139,12 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                     var film = asyncMsg.getFilmByIdResponse
 
-                    release_date = film.release_date;
+                    milli_date = film.milli_date;
 
                     mongoMsg(getby("films", {
                         genre_id: film.genre_id,
-                        release_date: { $gt: release_date - 473354280000 },
-                        release_date: { $lt: release_date + 473354280000 }
+                        milli_date: { $gt: milli_date - 473354280000 },
+                        milli_date: { $lt: milli_date + 473354280000 }
                     }, {}, function(msg) {
 
                         if (!msg.docs || msg.docs.length == 0 || msg.err) {
@@ -124,6 +163,29 @@ router.get('/:id/recommendations', function(req, response, next) {
                     }))
 
                 },
+                function(asyncMsg, done){
+
+                    mongoMsg(getby("genres", {
+                        id: asyncMsg.getFilmByIdResponse.genre_id,
+                    }, {}, function(msg) {
+
+                        if (!msg.docs || msg.docs.length == 0 || msg.err) {
+
+                            return done(new Error(msg.err || " no good recommendations found"));
+
+                        } else {
+
+                            asyncMsg.getGenre = msg.docs[0]
+
+                            return done(null, asyncMsg);
+
+                        }
+
+
+                    }))
+
+
+                },
                 function(asyncMsg, done) {
                     // Options for the request.
 
@@ -136,8 +198,6 @@ router.get('/:id/recommendations', function(req, response, next) {
                     )
 
                     request(getReviewsUrl, function(error, getReviewsResponse, getReviewsResponseBody) {
-
-                            console.log("getReviewsUrl", getReviewsResponseBody)
 
                             asyncMsg.getReviews = JSON.parse(getReviewsResponseBody);
 
@@ -156,15 +216,9 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                         var reviews = reviewSet.reviews;
 
-                        console.log(reviews.map((r) => r.rating))
-
                         var setSum = reviews.map((r) => r.rating).reduce((prev, curr) => prev + curr)
 
-                        console.log("sum", setSum)
-
                         var avg = (setSum / reviews.length)
-
-                        console.log("avg", avg)
 
                         return avg > 4
 
@@ -186,10 +240,10 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                             "id": film.id,
                             "title": film.title,
-                            "releaseDate": new Date(film.release_date).toLocaleString(),
-                            "genre": film.genre_id,
-                            "averageRating": avg,
-                            "reviews": ratingSet.length
+                            "releaseDate": film.release_date,
+                            "genre":asyncMsg.getGenre.name ,
+                            "averageRating":Math.round10(avg,-2),
+                            "reviews": ratingSet.reviews.length
 
                         }
 
@@ -223,7 +277,5 @@ router.get('/:id/recommendations', function(req, response, next) {
     }
 
 });
-
-
 
 module.exports = router

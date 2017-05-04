@@ -9,6 +9,7 @@ function ok(expression, message) {
 }
 
 describe('Recommendations API', function() {
+
   describe('returns successful response defaults', function() {
     let cachedResponse;
 
@@ -73,7 +74,7 @@ describe('Recommendations API', function() {
               title: 'Agent Deathstroke Teacher',
               releaseDate: '2001-10-19',
               genre: 'Western',
-              directors: [ 'Fiona Stehr' ],
+            //  directors: [ 'Fiona Stehr' ],
               averageRating: 4.6,
               reviews: 5,
             },
@@ -82,7 +83,7 @@ describe('Recommendations API', function() {
               title: 'Colossus Strike Police Officer',
               releaseDate: '2014-01-10',
               genre: 'Western',
-              directors: [ 'Zella Sauer' ],
+            //  directors: [ 'Zella Sauer' ],
               averageRating: 4.57,
               reviews: 7,
             },
@@ -91,7 +92,7 @@ describe('Recommendations API', function() {
               title: 'Carnage Actor',
               releaseDate: '2006-02-15',
               genre: 'Western',
-              directors: [ 'Jovani Bashirian' ],
+            //  directors: [ 'Jovani Bashirian' ],
               averageRating: 4.33,
               reviews: 6,
             },
@@ -115,7 +116,7 @@ describe('Recommendations API', function() {
                 title: 'Agent Deathstroke Teacher',
                 releaseDate: '2001-10-19',
                 genre: 'Western',
-                directors: [ 'Fiona Stehr' ],
+               // directors: [ 'Fiona Stehr' ],
                 averageRating: 4.6,
                 reviews: 5,
               },
@@ -138,7 +139,7 @@ describe('Recommendations API', function() {
                 title: 'Colossus Strike Police Officer',
                 releaseDate: '2014-01-10',
                 genre: 'Western',
-                directors: [ 'Zella Sauer' ],
+               // directors: [ 'Zella Sauer' ],
                 averageRating: 4.57,
                 reviews: 7,
               },
@@ -147,7 +148,7 @@ describe('Recommendations API', function() {
                 title: 'Carnage Actor',
                 releaseDate: '2006-02-15',
                 genre: 'Western',
-                directors: [ 'Jovani Bashirian' ],
+               // directors: [ 'Jovani Bashirian' ],
                 averageRating: 4.33,
                 reviews: 6,
               },
