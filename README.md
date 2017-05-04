@@ -1,5 +1,11 @@
 # <img src="https://potatoes.ahdb.org.uk/sites/default/files/150824_Potato_4PRINT-Kindred-v1-A5%20cropped.jpg" width="40px"> FreshPotatoes.com
 
+
+## seth Note
+Migrate to mongo db
+hit the url "http://localhost:3000/films/migrate/1" 
+once the server is started to migrate to mongo 
+
 ## Overview
 
 FreshPotatoes.com is a wiki-based website for films and artists.  
