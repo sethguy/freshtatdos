@@ -35,6 +35,10 @@ router.get('/:id/recommendations', function(req, response, next) {
 
         var params = req.params;
 
+        var limit = query.limit || 10
+
+        var offset = query.offset || 0
+
         var thirdPartyUrl = GA_THIRD_PARTY_API_URL_BASE.concat(params.id)
 
         //rows contain values while errors, well you can figure out.
@@ -192,11 +196,17 @@ router.get('/:id/recommendations', function(req, response, next) {
                     return;
                 }
 
+                var recommendations = asyncMsg.doneSet.filter( ( film , i ) =>{
+
+                        return (i >= offset) && (i < (offset+limit) )
+
+                 } )
+
                 response.status(200).json({
-                    "recommendations": asyncMsg.doneSet,
+                    "recommendations": recommendations,
                     "meta": {
-                        "limit": (params.limit || 10),
-                        "offset": (params.offset || 0)
+                        "limit": (limit),
+                        "offset": (offset )
                     }
                 });
 
