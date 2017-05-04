@@ -18,7 +18,7 @@ Promise.resolve()
 
 
 // ROUTES
-app.use('/films', films)
+app.use('/films', films);
 
 
 // Middleware to catch any 404s
@@ -31,7 +31,7 @@ app.use(function(request, response, next) {
             message: 'The endpoint ' + request.originalUrl + ' does not exist.'
 
         }
-    )
+    );
 });
 
 

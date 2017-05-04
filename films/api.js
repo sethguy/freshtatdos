@@ -16,6 +16,14 @@ const GA_THIRD_PARTY_API_URL_BASE = 'http://credentials-api.generalassemb.ly/457
 
 //run migration endPoint http://localhost:3000/films/migrate/1
 
+
+
+                db.all('SELECT * from films', function(err, rows) {
+
+                            console.log("films",rows)
+
+                });
+
 router.get('/:id/recommendations', function(req, response, next) {
 
     try {
@@ -24,9 +32,9 @@ router.get('/:id/recommendations', function(req, response, next) {
 
         var params = req.params;
 
-        var limit = query.limit || 10
+        var limit = query.limit || 10;
 
-        var offset = query.offset || 0
+        var offset = query.offset || 0;
 
         var onlyNumbers = /^\d+$/;
 
@@ -66,7 +74,7 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                         } else {
 
-                            asyncMsg.getFilmByIdResponse = msg.docs[0]
+                            asyncMsg.getFilmByIdResponse = msg.docs[0];
 
                             return done(null, asyncMsg);
 
