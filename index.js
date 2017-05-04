@@ -23,4 +23,19 @@ app.use('/films', films)
 
 
 
+// Middleware to catch any 404s
+app.use(function(request, response, next) {
+
+    return response.status(404).json(
+
+        {
+
+            message: 'The endpoint ' + request.originalUrl + ' does not exist.'
+
+        }
+    )
+});
+
+
+
 module.exports = app;
