@@ -3,7 +3,7 @@ const express = require('express'),
     router = express.Router(),
     sqlite3 = require('sqlite3').verbose(),
     async = require('async'),
-    MongoMsgApi = require("../db/mongoMsg"),
+    MongoMsgApi = require('../db/mongoMsg'),
     ObjectId = require('mongodb').ObjectID,
     mongoMsg = MongoMsgApi.msg,
     sertobj = MongoMsgApi.sertobj,
@@ -12,19 +12,9 @@ const express = require('express'),
     getbySort = MongoMsgApi.getbySort,
     db = new sqlite3.Database('./db/database.db');
 
-const GA_THIRD_PARTY_API_URL_BASE = "http://credentials-api.generalassemb.ly/4576f55f-c427-4cfc-a11c-5bfe914ca6c1?films="
+const GA_THIRD_PARTY_API_URL_BASE = 'http://credentials-api.generalassemb.ly/4576f55f-c427-4cfc-a11c-5bfe914ca6c1?films='
 
-router.get('/:id', function(req, response, next) {
-
-    var params = req.params;
-
-    mongoMsg(getby("films", { id: parseInt(params.id) }, {}, function(msg) {
-
-        response.status(200).json(msg.docs);
-
-    }))
-
-})
+//run migration endPoint http://localhost:3000/films/migrate/1
 
 router.get('/:id/recommendations', function(req, response, next) {
 
@@ -38,22 +28,22 @@ router.get('/:id/recommendations', function(req, response, next) {
 
         var offset = query.offset || 0
 
-        var onlyNumbers =/^\d+$/
+        var onlyNumbers = /^\d+$/;
 
-        if (!onlyNumbers.test(params.id) ) {
+        if (!onlyNumbers.test(params.id)) {
 
             return response.status(422).json({
-                message:"InValid id ::  "+params.id
+                message: 'InValid id ::  ' + params.id
             });
 
 
         }
 
-        if ( !onlyNumbers.test(limit) ||  !onlyNumbers.test(offset)  ) {
+        if (!onlyNumbers.test(limit) || !onlyNumbers.test(offset)) {
 
             return response.status(422).json({
-                message:"InValid query params ::  "+params.id,
-                queryParams:query
+                message: 'InValid query params ::  ' + params.id,
+                queryParams: query
             });
 
 
@@ -67,12 +57,12 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                     };
 
-                    mongoMsg(getby("films", { id: parseInt(params.id) }, {}, function(msg) {
+                    mongoMsg(getby('films', { id: parseInt(params.id) }, {}, function(msg) {
 
 
                         if (!msg.docs || msg.docs.length == 0 || msg.err) {
 
-                            return done(new Error(msg.err || " no film with that id"));
+                            return done(new Error(msg.err || ' no film with that id'));
 
                         } else {
 
@@ -92,7 +82,7 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                     milli_date = film.milli_date;
 
-                    mongoMsg(getby("films", {
+                    mongoMsg(getby('films', {
                         genre_id: film.genre_id,
                         milli_date: { $gt: milli_date - 473354280000 },
                         milli_date: { $lt: milli_date + 473354280000 }
@@ -100,7 +90,7 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                         if (!msg.docs || msg.docs.length == 0 || msg.err) {
 
-                            return done(new Error(msg.err || " no good recommendations found"));
+                            return done(new Error(msg.err || ' no good recommendations found'));
 
                         } else {
 
@@ -116,13 +106,13 @@ router.get('/:id/recommendations', function(req, response, next) {
                 },
                 function(asyncMsg, done) {
 
-                    mongoMsg(getby("genres", {
+                    mongoMsg(getby('genres', {
                         id: asyncMsg.getFilmByIdResponse.genre_id,
                     }, {}, function(msg) {
 
                         if (!msg.docs || msg.docs.length == 0 || msg.err) {
 
-                            return done(new Error(msg.err || " no good recommendations found"));
+                            return done(new Error(msg.err || ' no good recommendations found'));
 
                         } else {
 
@@ -189,12 +179,12 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                         return {
 
-                            "id": film.id,
-                            "title": film.title,
-                            "releaseDate": film.release_date,
-                            "genre": asyncMsg.getGenre.name,
-                            "averageRating": avg.toFixed(2),
-                            "reviews": ratingSet.reviews.length
+                            'id': film.id,
+                            'title': film.title,
+                            'releaseDate': film.release_date,
+                            'genre': asyncMsg.getGenre.name,
+                            'averageRating': avg.toFixed(2),
+                            'reviews': ratingSet.reviews.length
 
                         }
 
@@ -219,10 +209,10 @@ router.get('/:id/recommendations', function(req, response, next) {
                 })
 
                 response.status(200).json({
-                    "recommendations": recommendations,
-                    "meta": {
-                        "limit": (limit),
-                        "offset": (offset)
+                    'recommendations': recommendations,
+                    'meta': {
+                        'limit': (limit),
+                        'offset': (offset)
                     }
                 });
 
@@ -249,7 +239,7 @@ router.get('/migrate/1', function(req, response, next) {
 
                 };
 
-                db.all("SELECT * from films", function(err, rows) {
+                db.all('SELECT * from films', function(err, rows) {
 
                     var films = rows.map((film) => {
 
@@ -259,7 +249,7 @@ router.get('/migrate/1', function(req, response, next) {
 
                     })
 
-                    mongoMsg(sertMany("films", films, function(msg) {
+                    mongoMsg(sertMany('films', films, function(msg) {
 
                         if (msg.err) {
 
@@ -280,10 +270,10 @@ router.get('/migrate/1', function(req, response, next) {
             function(asyncMsg, done) {
 
 
-                db.all("SELECT * from genres", function(err, rows) {
+                db.all('SELECT * from genres', function(err, rows) {
 
 
-                    mongoMsg(sertMany("genres", rows, function(msg) {
+                    mongoMsg(sertMany('genres', rows, function(msg) {
 
                         if (msg.err) {
 
@@ -305,10 +295,10 @@ router.get('/migrate/1', function(req, response, next) {
             function(asyncMsg, done) {
 
 
-                db.all("SELECT * from artists", function(err, rows) {
+                db.all('SELECT * from artists', function(err, rows) {
 
 
-                    mongoMsg(sertMany("artists", rows, function(msg) {
+                    mongoMsg(sertMany('artists', rows, function(msg) {
 
                         if (msg.err) {
 
@@ -329,10 +319,10 @@ router.get('/migrate/1', function(req, response, next) {
             },
             function(asyncMsg, done) {
 
-                db.all("SELECT * from artist_films", function(err, rows) {
+                db.all('SELECT * from artist_films', function(err, rows) {
 
 
-                    mongoMsg(sertMany("artist_films", rows, function(msg) {
+                    mongoMsg(sertMany('artist_films', rows, function(msg) {
 
                         if (msg.err) {
 

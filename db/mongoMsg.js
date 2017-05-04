@@ -15,7 +15,7 @@ module.exports = {
     msg: function(calli) {
         // Use connect method to connect to the Server
 
-        console.log("mongoUrl", mongoUrl)
+        console.log('mongoUrl', mongoUrl)
         MongoClient.connect(mongoUrl, function(err, db) {
             if (err) throw err;
 
