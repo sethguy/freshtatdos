@@ -17,10 +17,8 @@ Promise.resolve()
 
 
 
-
 // ROUTES
 app.use('/films', films)
-
 
 
 // Middleware to catch any 404s

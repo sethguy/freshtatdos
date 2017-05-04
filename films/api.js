@@ -39,9 +39,26 @@ router.get('/:id/recommendations', function(req, response, next) {
 
         var offset = query.offset || 0
 
-        var thirdPartyUrl = GA_THIRD_PARTY_API_URL_BASE.concat(params.id)
+        var onlyNumbers =/^\d+$/
 
-        //rows contain values while errors, well you can figure out.
+        if (!onlyNumbers.test(params.id) ) {
+
+            return response.status(422).json({
+                message:"InValid id ::  "+params.id
+            });
+
+
+        }
+
+        if ( !onlyNumbers.test(limit) ||  !onlyNumbers.test(offset)  ) {
+
+            return response.status(422).json({
+                message:"InValid query params ::  "+params.id,
+                queryParams:query
+            });
+
+
+        }
 
         async.waterfall(
             [
@@ -98,7 +115,7 @@ router.get('/:id/recommendations', function(req, response, next) {
                     }))
 
                 },
-                function(asyncMsg, done){
+                function(asyncMsg, done) {
 
                     mongoMsg(getby("genres", {
                         id: asyncMsg.getFilmByIdResponse.genre_id,
@@ -166,7 +183,7 @@ router.get('/:id/recommendations', function(req, response, next) {
                         .filter((film) => (averageAtleast4IdList.indexOf(film.id) > -1)).map((film) => {
 
                         var ratingSet = averageAtleast4.filter((set) => (set.film_id == film.id))[0]
-        
+
                         var setSum = ratingSet.reviews.map((r) => r.rating).reduce((prev, curr) => prev + curr)
 
                         var avg = setSum / ratingSet.reviews.length
@@ -176,8 +193,8 @@ router.get('/:id/recommendations', function(req, response, next) {
                             "id": film.id,
                             "title": film.title,
                             "releaseDate": film.release_date,
-                            "genre":asyncMsg.getGenre.name ,
-                            "averageRating":Math.round10(avg,-2),
+                            "genre": asyncMsg.getGenre.name,
+                            "averageRating": avg.toFixed(2),
                             "reviews": ratingSet.reviews.length
 
                         }
@@ -196,17 +213,17 @@ router.get('/:id/recommendations', function(req, response, next) {
                     return;
                 }
 
-                var recommendations = asyncMsg.doneSet.filter( ( film , i ) =>{
+                var recommendations = asyncMsg.doneSet.filter((film, i) => {
 
-                        return (i >= offset) && (i < (offset+limit) )
+                    return (i >= offset) && (i < (offset + limit))
 
-                 } )
+                })
 
                 response.status(200).json({
                     "recommendations": recommendations,
                     "meta": {
                         "limit": (limit),
-                        "offset": (offset )
+                        "offset": (offset)
                     }
                 });
 
@@ -218,7 +235,6 @@ router.get('/:id/recommendations', function(req, response, next) {
     }
 
 });
-
 
 router.get('/migrate/1', function(req, response, next) {
 
@@ -353,20 +369,20 @@ router.get('/migrate/1', function(req, response, next) {
 
 })
 
- function decimalAdjust(type, value, exp) {
+function decimalAdjust(type, value, exp) {
     // If the exp is undefined or zero...
     if (typeof exp === 'undefined' || +exp === 0) {
-      return Math[type](value);
+        return Math[type](value);
     }
     value = +value;
     exp = +exp;
     // If the value is not a number or the exp is not an integer...
     if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
-      return NaN;
+        return NaN;
     }
     // If the value is negative...
     if (value < 0) {
-      return -decimalAdjust(type, -value, exp);
+        return -decimalAdjust(type, -value, exp);
     }
     // Shift
     value = value.toString().split('e');
@@ -374,25 +390,25 @@ router.get('/migrate/1', function(req, response, next) {
     // Shift back
     value = value.toString().split('e');
     return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
-  }
+}
 
-  // Decimal round
-  if (!Math.round10) {
+// Decimal round
+if (!Math.round10) {
     Math.round10 = function(value, exp) {
-      return decimalAdjust('round', value, exp);
+        return decimalAdjust('round', value, exp);
     };
-  }
-  // Decimal floor
-  if (!Math.floor10) {
+}
+// Decimal floor
+if (!Math.floor10) {
     Math.floor10 = function(value, exp) {
-      return decimalAdjust('floor', value, exp);
+        return decimalAdjust('floor', value, exp);
     };
-  }
-  // Decimal ceil
-  if (!Math.ceil10) {
+}
+// Decimal ceil
+if (!Math.ceil10) {
     Math.ceil10 = function(value, exp) {
-      return decimalAdjust('ceil', value, exp);
+        return decimalAdjust('ceil', value, exp);
     };
-  }
+}
 
 module.exports = router
