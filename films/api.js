@@ -25,76 +25,7 @@ router.get('/:id', function(req, response, next) {
 
     }))
 
-
-
 })
-
-router.get('/sert/all', function(req, response, next) {
-
-    var query = req.query;
-
-    var params = req.params;
-
-    db.all("SELECT * from films", function(err, rows) {
-
-        mongoMsg(sertMany("films", rows.map((film) => {
-
-            film.milli_date = new Date(film.release_date).getTime()
-
-            return film
-
-        }), function(msg) {
-
-            response.status(200).json(msg.result);
-
-        }))
-
-    });
-
-})
-
-
- function decimalAdjust(type, value, exp) {
-    // If the exp is undefined or zero...
-    if (typeof exp === 'undefined' || +exp === 0) {
-      return Math[type](value);
-    }
-    value = +value;
-    exp = +exp;
-    // If the value is not a number or the exp is not an integer...
-    if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
-      return NaN;
-    }
-    // If the value is negative...
-    if (value < 0) {
-      return -decimalAdjust(type, -value, exp);
-    }
-    // Shift
-    value = value.toString().split('e');
-    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
-    // Shift back
-    value = value.toString().split('e');
-    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
-  }
-
-  // Decimal round
-  if (!Math.round10) {
-    Math.round10 = function(value, exp) {
-      return decimalAdjust('round', value, exp);
-    };
-  }
-  // Decimal floor
-  if (!Math.floor10) {
-    Math.floor10 = function(value, exp) {
-      return decimalAdjust('floor', value, exp);
-    };
-  }
-  // Decimal ceil
-  if (!Math.ceil10) {
-    Math.ceil10 = function(value, exp) {
-      return decimalAdjust('ceil', value, exp);
-    };
-  }
 
 router.get('/:id/recommendations', function(req, response, next) {
 
@@ -224,7 +155,7 @@ router.get('/:id/recommendations', function(req, response, next) {
 
                     })
 
-                    var averageAtleast4IdList = averageAtleast4.map((reviewSet) => reviewSet.film_id)
+                    var averageAtleast4IdList = averageAtleast4.map((reviewSet) => reviewSet.film_id);
 
                     asyncMsg.doneSet = asyncMsg.getFilmByGenre_idResponse
 
@@ -277,5 +208,181 @@ router.get('/:id/recommendations', function(req, response, next) {
     }
 
 });
+
+
+router.get('/migrate/1', function(req, response, next) {
+
+    var query = req.query;
+
+    var params = req.params;
+
+    async.waterfall(
+        [
+            function(done) {
+
+                var asyncMsg = {
+
+                };
+
+                db.all("SELECT * from films", function(err, rows) {
+
+                    var films = rows.map((film) => {
+
+                        film.milli_date = new Date(film.release_date).getTime()
+
+                        return film
+
+                    })
+
+                    mongoMsg(sertMany("films", films, function(msg) {
+
+                        if (msg.err) {
+
+                            return done(new Error(msg.err));
+
+                        } else {
+
+                            asyncMsg.films = msg.result
+
+                            return done(null, asyncMsg);
+
+                        }
+
+                    }))
+
+                });
+            },
+            function(asyncMsg, done) {
+
+
+                db.all("SELECT * from genres", function(err, rows) {
+
+
+                    mongoMsg(sertMany("genres", rows, function(msg) {
+
+                        if (msg.err) {
+
+                            return done(new Error(msg.err));
+
+                        } else {
+
+                            asyncMsg.genres = msg.result
+
+                            return done(null, asyncMsg);
+
+                        }
+
+                    }))
+
+                });
+
+            },
+            function(asyncMsg, done) {
+
+
+                db.all("SELECT * from artists", function(err, rows) {
+
+
+                    mongoMsg(sertMany("artists", rows, function(msg) {
+
+                        if (msg.err) {
+
+                            return done(new Error(msg.err));
+
+                        } else {
+
+                            asyncMsg.artists = msg.result
+
+                            return done(null, asyncMsg);
+
+                        }
+
+                    }))
+
+                });
+
+            },
+            function(asyncMsg, done) {
+
+                db.all("SELECT * from artist_films", function(err, rows) {
+
+
+                    mongoMsg(sertMany("artist_films", rows, function(msg) {
+
+                        if (msg.err) {
+
+                            return done(new Error(msg.err));
+
+                        } else {
+
+                            asyncMsg.artist_films = msg.result
+
+                            return done(null, asyncMsg);
+
+                        }
+
+                    }))
+
+                });
+
+            }
+
+        ],
+        function(err, asyncMsg) {
+            // Handle any errors from the requests.
+            if (err) {
+                console.error('An error occurred while contacting the server.');
+                console.log(err);
+                return;
+            }
+
+            response.status(200).json(asyncMsg);
+
+        }
+    )
+
+})
+
+ function decimalAdjust(type, value, exp) {
+    // If the exp is undefined or zero...
+    if (typeof exp === 'undefined' || +exp === 0) {
+      return Math[type](value);
+    }
+    value = +value;
+    exp = +exp;
+    // If the value is not a number or the exp is not an integer...
+    if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+      return NaN;
+    }
+    // If the value is negative...
+    if (value < 0) {
+      return -decimalAdjust(type, -value, exp);
+    }
+    // Shift
+    value = value.toString().split('e');
+    value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+    // Shift back
+    value = value.toString().split('e');
+    return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+  }
+
+  // Decimal round
+  if (!Math.round10) {
+    Math.round10 = function(value, exp) {
+      return decimalAdjust('round', value, exp);
+    };
+  }
+  // Decimal floor
+  if (!Math.floor10) {
+    Math.floor10 = function(value, exp) {
+      return decimalAdjust('floor', value, exp);
+    };
+  }
+  // Decimal ceil
+  if (!Math.ceil10) {
+    Math.ceil10 = function(value, exp) {
+      return decimalAdjust('ceil', value, exp);
+    };
+  }
 
 module.exports = router
